@@ -7,5 +7,10 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.66"
-reqwest = {version="0.11.13", features=["blocking"]}
+clap = {version="4.0.29", features=["env", "derive"]}
+dotenvy = "0.15.6"
+reqwest = {version="0.11.13", features=["blocking", "cookies"]}
 serde_json = "1.0.89"
+actix-web = "4"
+chrono = {version="0.4.23", features=["serde"]}
+serde = {version="1.0.150", features=["derive"]}
