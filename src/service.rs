@@ -39,9 +39,8 @@ impl UntisService {
 
             let school_split = &mut self.config.url.split('=');
             school_split.next();
-            school_split.next();
             let unobfuscated_school_name = school_split.as_str();
-            let user = &self.config.username.as_str();
+            let user = &self.config.user.as_str();
             let pass = &self.config.password.as_str();
 
             login_params.insert("school", unobfuscated_school_name);

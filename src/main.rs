@@ -6,7 +6,7 @@ use std::{
 };
 
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
-use chrono::{Local, NaiveDate, NaiveTime};
+use chrono::{Datelike, Days, Local, NaiveDate, NaiveTime, Timelike};
 use clap::Parser;
 use config::Configuration;
 use dotenvy::dotenv;
@@ -19,9 +19,24 @@ pub mod config;
 pub mod service;
 pub mod table;
 
-async fn send_table(req: HttpRequest, data: web::Data<Arc<Mutex<Vec<Lesson>>>>) -> impl Responder {
+async fn weekly(req: HttpRequest, data: web::Data<Arc<Mutex<Vec<Lesson>>>>) -> impl Responder {
     let u_data = data.lock().unwrap();
     return HttpResponse::Ok().body(serde_json::to_string(&*u_data).unwrap());
+}
+
+async fn first_class(req: HttpRequest, data: web::Data<Arc<Mutex<Vec<Lesson>>>>) -> impl Responder {
+    let u_data = data.lock().unwrap();
+    let lessons = &mut u_data.clone();
+    let tomorrow = Local::now().checked_add_days(Days::new(1)).unwrap();
+
+    let mut day_lessons = lessons
+        .iter()
+        .filter(|s| s.date == tomorrow.date_naive())
+        .collect::<Vec<_>>();
+
+    day_lessons.sort_by_key(|s| s.start_time.num_seconds_from_midnight());
+
+    return HttpResponse::Ok().body(serde_json::to_string(&day_lessons[0]).unwrap());
 }
 
 #[actix_web::main]
@@ -42,7 +57,8 @@ async fn main() -> anyhow::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .route("/table", web::get().to(send_table))
+            .route("/week", web::get().to(weekly))
+            .route("/tomorrow", web::get().to(first_class))
             .app_data(web::Data::new(lessons.clone()))
     })
     .bind(("127.0.0.1", 8080))?

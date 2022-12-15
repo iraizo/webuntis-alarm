@@ -1,14 +1,14 @@
 use chrono::{NaiveDate, NaiveTime};
 use serde::{Deserialize, Deserializer, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Lesson {
     #[serde(deserialize_with = "from_date")]
-    date: NaiveDate,
+    pub date: NaiveDate,
     #[serde(deserialize_with = "from_time", rename = "startTime")]
-    start_time: NaiveTime,
+    pub start_time: NaiveTime,
     #[serde(deserialize_with = "from_time", rename = "endTime")]
-    end_time: NaiveTime,
+    pub end_time: NaiveTime,
 }
 
 fn from_date<'de, D>(deserializer: D) -> Result<NaiveDate, D::Error>
