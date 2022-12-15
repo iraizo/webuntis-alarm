@@ -29,6 +29,6 @@ You can either manually get the data by accessing the routes listed below
 GET /tomorrow => returns the first class for tomorrow (date, start, end)
 GET /week => returns an array of the current classes for the current week (date, start, end)
 ```
-or use my already done [shortcut](https://www.icloud.com/shortcuts/ac52b16cc96645d18792fc4b738ad604) for iOS, you will be asked for the URL which would be `YOUR_HOST_HERE/tomorrow``
+or use my already done [shortcut](https://www.icloud.com/shortcuts/ac52b16cc96645d18792fc4b738ad604) for iOS, you will be asked for the URL which would be `YOUR_HOST_HERE/tomorrow`
 
 If you need any help setting it up or feature suggestions / bugs feel free to contact me / create an issue.
