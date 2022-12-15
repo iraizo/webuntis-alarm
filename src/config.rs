@@ -7,10 +7,13 @@ pub struct Configuration {
     pub url: String,
 
     #[arg(long, env, required = true)]
-    pub username: String,
+    pub user: String,
 
     #[arg(long, env, required = true)]
     pub password: String,
+
+    #[arg(long, env, required = true)]
+    pub host: String,
 }
 
 pub fn parse() -> Configuration {

@@ -46,7 +46,7 @@ async fn main() -> anyhow::Result<()> {
 
     let config = Configuration::parse();
     let lessons = Arc::new(Mutex::new(vec![]));
-    let untis_service = UntisService::new(config, lessons.clone());
+    let untis_service = UntisService::new(config.clone(), lessons.clone());
 
     tokio::spawn(async move {
         loop {
@@ -61,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
             .route("/tomorrow", web::get().to(first_class))
             .app_data(web::Data::new(lessons.clone()))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(config.host)?
     .run()
     .await?;
 
