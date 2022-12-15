@@ -30,7 +30,7 @@ where
     let s = u32::deserialize(deserializer)?;
     let s = s.to_string();
 
-    if s.len() > 4 {
+    if s.len() >= 4 {
         let hh = &s[0..2];
         let mm = &s[2..4];
 
