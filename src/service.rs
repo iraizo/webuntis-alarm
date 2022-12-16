@@ -82,7 +82,9 @@ impl UntisService {
                     let mut table_mutex = self.lessons.lock().unwrap();
 
                     let tables: Vec<Lesson> = json["data"]["result"]["data"]["elementPeriods"]
-                        ["2902"]
+                        [&json["data"]["result"]["data"]["elementIds"][0]
+                            .as_str()
+                            .unwrap()]
                         .as_array()
                         .unwrap()
                         .into_iter()
