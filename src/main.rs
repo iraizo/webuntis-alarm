@@ -14,6 +14,7 @@ use reqwest::cookie::Cookie;
 use serde::{Deserialize, Deserializer, Serialize};
 use service::UntisService;
 use table::Lesson;
+use serde_json::json;
 
 pub mod config;
 pub mod service;
@@ -35,6 +36,10 @@ async fn first_class(req: HttpRequest, data: web::Data<Arc<Mutex<Vec<Lesson>>>>)
         .collect::<Vec<_>>();
 
     day_lessons.sort_by_key(|s| s.start_time.num_seconds_from_midnight());
+    
+    if day_lessons.len() == 0 {
+        return HttpResponse::Ok().body(json!({"error": "No lessons for tomorrow"}).to_string());   
+    }
 
     return HttpResponse::Ok().body(serde_json::to_string(&day_lessons[0]).unwrap());
 }
