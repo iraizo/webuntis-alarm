@@ -75,10 +75,10 @@ impl UntisService {
                 let today = Local::now().weekday();
 
                 if today == Weekday::Sat {
-                    todays_date.checked_add_signed(Duration::days(2)).unwrap();
+                    todays_date = todays_date.checked_add_signed(Duration::days(2)).unwrap();
                 }
                 if today == Weekday::Sun {
-                    todays_date.checked_add_signed(Duration::days(1)).unwrap();
+                    todays_date = todays_date.checked_add_signed(Duration::days(1)).unwrap();
                 }
 
                 let date = todays_date.format("%Y-%m-%d").to_string();
