@@ -1,5 +1,7 @@
 #![feature(str_split_as_str)]
 use std::{
+    fs::File,
+    io::BufReader,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -9,6 +11,8 @@ use chrono::{Days, Local, Timelike};
 use clap::Parser;
 use config::Configuration;
 use dotenvy::dotenv;
+use rustls::{Certificate, PrivateKey, ServerConfig};
+use rustls_pemfile::{certs, pkcs8_private_keys};
 use serde_json::json;
 use service::UntisService;
 use std::cmp::Ordering;
@@ -50,6 +54,37 @@ async fn first_class(
     return HttpResponse::Ok().body(serde_json::to_string(&day_lessons[0]).unwrap());
 }
 
+fn load_rustls_config(cfg: &Configuration) -> rustls::ServerConfig {
+    // init server config builder with safe defaults
+    let config = ServerConfig::builder()
+        .with_safe_defaults()
+        .with_no_client_auth();
+
+    // load TLS key/cert files
+    let cert_file = &mut BufReader::new(File::open(cfg.cert.clone()).unwrap());
+    let key_file = &mut BufReader::new(File::open(cfg.key.clone()).unwrap());
+
+    // convert files to key/cert objects
+    let cert_chain = certs(cert_file)
+        .unwrap()
+        .into_iter()
+        .map(Certificate)
+        .collect();
+    let mut keys: Vec<PrivateKey> = pkcs8_private_keys(key_file)
+        .unwrap()
+        .into_iter()
+        .map(PrivateKey)
+        .collect();
+
+    // exit if no keys could be parsed
+    if keys.is_empty() {
+        eprintln!("Could not locate PKCS 8 private keys.");
+        std::process::exit(1);
+    }
+
+    config.with_single_cert(cert_chain, keys.remove(0)).unwrap()
+}
+
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
     dotenv()?;
@@ -58,6 +93,7 @@ async fn main() -> anyhow::Result<()> {
     let config = Configuration::parse();
     let lessons = Arc::new(Mutex::new(vec![]));
     let untis_service = UntisService::new(config.clone(), lessons.clone());
+    let ssl_config = load_rustls_config(&config);
 
     tokio::spawn(async move {
         loop {
@@ -72,7 +108,7 @@ async fn main() -> anyhow::Result<()> {
             .route("/tomorrow", web::get().to(first_class))
             .app_data(web::Data::new(lessons.clone()))
     })
-    .bind(config.host)?
+    .bind_rustls(config.host, ssl_config)?
     .run()
     .await?;
 

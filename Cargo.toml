@@ -11,9 +11,11 @@ clap = {version="4.0.29", features=["env", "derive"]}
 dotenvy = "0.15.6"
 reqwest = {version="0.11.13", features=["blocking", "cookies"]}
 serde_json = "1.0.89"
-actix-web = "4"
+actix-web = {version="4", features=["rustls"]}
 chrono = {version="0.4.23", features=["serde"]}
 serde = {version="1.0.150", features=["derive"]}
 tokio = {version="1.0", features=["full"]}
 pretty_env_logger = "0.4.0"
 log = "0.4.17"
+rustls = "0.20.2"
+rustls-pemfile = "1"

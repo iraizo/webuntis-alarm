@@ -18,6 +18,8 @@
     PASSWORD="PASSWORD_TO_LOGIN"
     URL="https://mese.webuntis.com/WebUntis/?school=WHATEVER"
     HOST="127.0.0.1:8080"
+    CERT="PATH_TO_SSL_PEMFILE"
+    KEY="PATH_TO_SSL_KEY_PEMFILE"
     ```
     To retrieve the url go onto [untis](https://mese.webuntis.com) and find your school, the url should match whats above other than `school?=*` being different.  
     Username and password should be the one you use with untis  

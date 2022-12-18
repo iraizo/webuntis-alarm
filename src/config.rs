@@ -14,6 +14,12 @@ pub struct Configuration {
 
     #[arg(long, env, required = true)]
     pub host: String,
+
+    #[arg(long, env, required = true)]
+    pub cert: String,
+
+    #[arg(long, env, required = true)]
+    pub key: String,
 }
 
 pub fn parse() -> Configuration {
