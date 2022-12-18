@@ -2,6 +2,17 @@ use chrono::{NaiveDate, NaiveTime};
 use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Element {
+    #[serde(rename = "type")]
+    pub kind: u8,
+    pub id: u32,
+    #[serde(default)]
+    state: String,
+    #[serde(default, rename = "longName")]
+    pub long_name: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Lesson {
     #[serde(deserialize_with = "from_date")]
     pub date: NaiveDate,
@@ -9,6 +20,14 @@ pub struct Lesson {
     pub start_time: NaiveTime,
     #[serde(deserialize_with = "from_time", rename = "endTime")]
     pub end_time: NaiveTime,
+    #[serde(skip_serializing)]
+    pub elements: Vec<Element>,
+    #[serde(rename = "studentGroup")]
+    pub student_group: String,
+    #[serde(skip_deserializing)]
+    pub room: String,
+    #[serde(rename = "cellState")]
+    pub state: String,
 }
 
 fn from_date<'de, D>(deserializer: D) -> Result<NaiveDate, D::Error>

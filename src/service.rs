@@ -4,10 +4,13 @@ use std::{
 };
 
 use anyhow::Context;
-use chrono::Local;
+use chrono::{Local, NaiveDate};
 use reqwest::cookie::Cookie;
 
-use crate::{config::Configuration, table::Lesson};
+use crate::{
+    config::Configuration,
+    table::{Element, Lesson},
+};
 
 #[derive(Clone)]
 pub struct UntisService {
@@ -63,12 +66,15 @@ impl UntisService {
             let resp: serde_json::Value = serde_json::from_str(&security_check.text().await?)?;
 
             log::info!(
-                "Security check response: {:?}",
+                "Security check response: {:#?}",
                 serde_json::to_string_pretty(&resp)
             );
 
             if resp["state"] == "SUCCESS" {
-                let date = Local::now().format("%Y-%m-%d").to_string();
+                let mut date = Local::now().format("%Y-%m-%d").to_string();
+                let mut s = NaiveDate::parse_from_str(&date, "%Y-%m-%d").unwrap();
+                s = s.succ_opt().unwrap();
+                date = s.format("%Y-%m-%d").to_string();
 
                 let time_table = client
                 .get(format!("https://mese.webuntis.com/WebUntis/api/public/timetable/weekly/data?elementType=1&elementId=2902&date={}&formatId=2", date))
@@ -78,20 +84,36 @@ impl UntisService {
 
                 if time_table.status() == 200 {
                     let json: serde_json::Value = serde_json::from_str(&time_table.text().await?)?;
-
-                    let mut table_mutex = self.lessons.lock().unwrap();
-
-                    let tables: Vec<Lesson> = json["data"]["result"]["data"]["elementPeriods"]
-                        [&json["data"]["result"]["data"]["elementIds"][0]
-                            .as_str()
-                            .unwrap()]
+                    let mut lessons: Vec<Lesson> = json["data"]["result"]["data"]["elementPeriods"]
+                        [&json["data"]["result"]["data"]["elementIds"][0].to_string()]
                         .as_array()
                         .unwrap()
                         .into_iter()
                         .map(|v| serde_json::from_value(v.clone()).unwrap())
                         .collect();
 
-                    *table_mutex = tables;
+                    let elements: Vec<Element> = json["data"]["result"]["data"]["elements"]
+                        .as_array()
+                        .unwrap()
+                        .into_iter()
+                        .map(|v| serde_json::from_value(v.clone()).unwrap())
+                        .collect();
+
+                    for lesson in &mut lessons {
+                        for el in &lesson.elements {
+                            if el.kind == 4 {
+                                let room: Vec<&Element> =
+                                    elements.iter().filter(|e| e.id == el.id).collect();
+                                lesson.room = room[0].long_name.clone();
+                            }
+                        }
+                    }
+
+                    log::info!("{:#?}", lessons);
+
+                    let mut table_mutex = self.lessons.lock().unwrap();
+                    *table_mutex = lessons;
+
                     println!("set data");
                 }
             }

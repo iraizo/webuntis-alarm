@@ -1,31 +1,37 @@
 #![feature(str_split_as_str)]
 use std::{
-    collections::HashMap,
     sync::{Arc, Mutex},
     time::Duration,
 };
 
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
-use chrono::{Datelike, Days, Local, NaiveDate, NaiveTime, Timelike};
+use chrono::{Days, Local, Timelike};
 use clap::Parser;
 use config::Configuration;
 use dotenvy::dotenv;
-use reqwest::cookie::Cookie;
-use serde::{Deserialize, Deserializer, Serialize};
-use service::UntisService;
-use table::Lesson;
 use serde_json::json;
+use service::UntisService;
+use std::cmp::Ordering;
+use table::Lesson;
 
 pub mod config;
 pub mod service;
 pub mod table;
 
-async fn weekly(req: HttpRequest, data: web::Data<Arc<Mutex<Vec<Lesson>>>>) -> impl Responder {
-    let u_data = data.lock().unwrap();
+async fn weekly(_req: HttpRequest, data: web::Data<Arc<Mutex<Vec<Lesson>>>>) -> impl Responder {
+    let mut u_data = data.lock().unwrap();
+    u_data.sort_by(|a, b| match a.start_time.cmp(&b.start_time) {
+        Ordering::Less => Ordering::Less,
+        Ordering::Equal => Ordering::Equal,
+        Ordering::Greater => Ordering::Greater,
+    });
     return HttpResponse::Ok().body(serde_json::to_string(&*u_data).unwrap());
 }
 
-async fn first_class(req: HttpRequest, data: web::Data<Arc<Mutex<Vec<Lesson>>>>) -> impl Responder {
+async fn first_class(
+    _req: HttpRequest,
+    data: web::Data<Arc<Mutex<Vec<Lesson>>>>,
+) -> impl Responder {
     let u_data = data.lock().unwrap();
     let lessons = &mut u_data.clone();
     let tomorrow = Local::now().checked_add_days(Days::new(1)).unwrap();
@@ -36,9 +42,9 @@ async fn first_class(req: HttpRequest, data: web::Data<Arc<Mutex<Vec<Lesson>>>>)
         .collect::<Vec<_>>();
 
     day_lessons.sort_by_key(|s| s.start_time.num_seconds_from_midnight());
-    
+
     if day_lessons.len() == 0 {
-        return HttpResponse::Ok().body(json!({"error": "No lessons for tomorrow"}).to_string());   
+        return HttpResponse::Ok().body(json!({"error": "No lessons for tomorrow"}).to_string());
     }
 
     return HttpResponse::Ok().body(serde_json::to_string(&day_lessons[0]).unwrap());
