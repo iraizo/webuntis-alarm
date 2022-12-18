@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::Context;
-use chrono::{Local, NaiveDate};
+use chrono::{Datelike, Days, Duration, Local, NaiveDate, Weekday};
 use reqwest::cookie::Cookie;
 
 use crate::{
@@ -71,10 +71,17 @@ impl UntisService {
             );
 
             if resp["state"] == "SUCCESS" {
-                let mut date = Local::now().format("%Y-%m-%d").to_string();
-                let mut s = NaiveDate::parse_from_str(&date, "%Y-%m-%d").unwrap();
-                s = s.succ_opt().unwrap();
-                date = s.format("%Y-%m-%d").to_string();
+                let mut todays_date = Local::now();
+                let today = Local::now().weekday();
+
+                if today == Weekday::Sat {
+                    todays_date.checked_add_signed(Duration::days(2)).unwrap();
+                }
+                if today == Weekday::Sun {
+                    todays_date.checked_add_signed(Duration::days(1)).unwrap();
+                }
+
+                let date = todays_date.format("%Y-%m-%d").to_string();
 
                 let time_table = client
                 .get(format!("https://mese.webuntis.com/WebUntis/api/public/timetable/weekly/data?elementType=1&elementId=2902&date={}&formatId=2", date))
@@ -108,8 +115,6 @@ impl UntisService {
                             }
                         }
                     }
-
-                    log::info!("{:#?}", lessons);
 
                     let mut table_mutex = self.lessons.lock().unwrap();
                     *table_mutex = lessons;
