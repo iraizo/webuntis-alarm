@@ -42,14 +42,14 @@ impl UntisService {
 
             let school_split = &mut self.config.url.split('=');
             school_split.next();
-            let unobfuscated_school_name = school_split.as_str();
+            let unobfuscated_school_name = school_split.collect::<String>();
             let user = &self.config.user.as_str();
             let pass = &self.config.password.as_str();
 
             login_params.insert("school", unobfuscated_school_name);
-            login_params.insert("j_username", user);
-            login_params.insert("j_password", pass);
-            login_params.insert("token", &"");
+            login_params.insert("j_username", user.to_string());
+            login_params.insert("j_password", pass.to_string());
+            login_params.insert("token", "".to_string());
 
             log::info!("Login parameters: {:?}", login_params);
 

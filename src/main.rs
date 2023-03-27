@@ -1,4 +1,3 @@
-#![feature(str_split_as_str)]
 use std::{
     fs::File,
     io::BufReader,
